@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/order-details")
 public class OrderDetailController {
     private final OrderDetailRepository orderDetailRepository;
