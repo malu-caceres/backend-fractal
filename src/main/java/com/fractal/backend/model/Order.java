@@ -73,6 +73,14 @@ public class Order {
         return total;
     }
 
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
     public enum OrderStatus {
         Pending,
         InProgress,
@@ -80,4 +88,6 @@ public class Order {
     }
 
 }
+
+
 

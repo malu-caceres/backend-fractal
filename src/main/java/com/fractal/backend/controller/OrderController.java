@@ -1,9 +1,12 @@
 package com.fractal.backend.controller;
 
+import com.fractal.backend.exceptions.ResourceNotFoundException;
 import com.fractal.backend.model.OrderDetail;
+import com.fractal.backend.model.OrderInput;
+import com.fractal.backend.model.Product;
 import com.fractal.backend.repository.OrderDetailRepository;
+import com.fractal.backend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.fractal.backend.repository.OrderRepository;
@@ -12,7 +15,6 @@ import com.fractal.backend.model.Order;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -20,8 +22,18 @@ import java.util.Optional;
 public class OrderController {
 
     @Autowired
-    private OrderRepository orderRepository;
-    private OrderDetailRepository orderDetailRepository;
+    private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
+    private final OrderDetailRepository orderDetailRepository;
+
+    public OrderController(ProductRepository productRepository,
+                           OrderRepository orderRepository,
+                           OrderDetailRepository orderDetailRepository) {
+        this.productRepository = productRepository;
+        this.orderRepository = orderRepository;
+        this.orderDetailRepository = orderDetailRepository;
+
+    }
 
     @GetMapping
     public List<Order> getAllOrders() {
@@ -35,11 +47,53 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody Order order) {
+    public ResponseEntity<Order> createOrder(@RequestBody OrderInput orderInput) {
+        List<OrderDetail> inputOrderDetails = orderInput.getOrderDetails();
+
+        // Validate the order details
+        for (OrderDetail inputOrderDetail : inputOrderDetails) {
+            Optional<Product> optionalProduct = productRepository.findById(inputOrderDetail.getProductId());
+            if (optionalProduct.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            //Validate stock
+            Product product = optionalProduct.get();
+            if (product.getStock() < inputOrderDetail.getQuantity()) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+
+        // Create the order
+        Order order = new Order();
         order.setDate(LocalDate.now());
         order.setStatus(Order.OrderStatus.Pending);
+        order.setOrderNumber(orderInput.getOrderNumber());
         Order savedOrder = orderRepository.save(order);
-        return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
+
+        List<OrderDetail> orderDetails = new ArrayList<>();
+
+        for (OrderDetail inputOrderDetail : inputOrderDetails) {
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setProductId(inputOrderDetail.getProductId());
+            orderDetail.setOrderId(savedOrder.getId());
+            orderDetail.setOrder(savedOrder);
+            orderDetail.setQuantity(inputOrderDetail.getQuantity());
+            orderDetails.add(orderDetail);
+
+            // Update the product stock
+            Product product = productRepository.findById(inputOrderDetail.getProductId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + inputOrderDetail.getProductId()));
+            orderDetail.setProduct(product);
+            product.setStock(product.getStock() - inputOrderDetail.getQuantity());
+            productRepository.save(product);
+
+            //Save order detail
+            orderDetailRepository.save(orderDetail);
+        }
+        order.setOrderDetails(orderDetails);
+
+        return ResponseEntity.ok(savedOrder);
     }
 
     @PutMapping("/{id}")
