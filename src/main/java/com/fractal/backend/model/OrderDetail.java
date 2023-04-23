@@ -1,20 +1,38 @@
 package com.fractal.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 @Entity
 @Table(name = "order_details")
+//@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "order"})
 public class OrderDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
-    private Order order;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "product_id", referencedColumnName = "id", nullable = false)
+//    @JsonIgnore
+    private Product product;
+    @Transient
+    private Long productId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product product;
+    @JoinColumn(name = "order_id", referencedColumnName = "id")
+    @JsonIgnore
+    private Order order;
+    @Transient
+    private Long orderId;
+    public Long getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
 
     @Column(nullable = false)
     private int quantity;
@@ -35,12 +53,12 @@ public class OrderDetail {
         this.order = order;
     }
 
-    public Product getProduct() {
-        return product;
-    }
-
     public void setProduct(Product product) {
         this.product = product;
+    }
+
+    public Product getProduct() {
+        return product;
     }
 
     public int getQuantity() {
@@ -49,5 +67,13 @@ public class OrderDetail {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
     }
 }

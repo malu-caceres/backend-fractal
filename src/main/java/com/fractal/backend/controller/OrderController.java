@@ -1,5 +1,7 @@
 package com.fractal.backend.controller;
 
+import com.fractal.backend.model.OrderDetail;
+import com.fractal.backend.repository.OrderDetailRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,7 +10,9 @@ import com.fractal.backend.repository.OrderRepository;
 import com.fractal.backend.model.Order;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -17,6 +21,7 @@ public class OrderController {
 
     @Autowired
     private OrderRepository orderRepository;
+    private OrderDetailRepository orderDetailRepository;
 
     @GetMapping
     public List<Order> getAllOrders() {
@@ -58,5 +63,4 @@ public class OrderController {
         orderRepository.delete(optionalOrder.get());
         return ResponseEntity.noContent().build();
     }
-
 }

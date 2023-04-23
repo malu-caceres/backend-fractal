@@ -14,10 +14,11 @@ public class Order {
 
     @Column(nullable = false)
     private LocalDate date;
-
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
+
+    private String orderNumber;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetail> orderDetails;
@@ -38,6 +39,14 @@ public class Order {
 
     public LocalDate getDate() {
         return date;
+    }
+
+    public List<OrderDetail> getOrderDetails() {
+        return orderDetails;
+    }
+
+    public void setOrderDetails(List<OrderDetail> orderDetails) {
+        this.orderDetails = orderDetails;
     }
 
     public void setDate(LocalDate date) {
