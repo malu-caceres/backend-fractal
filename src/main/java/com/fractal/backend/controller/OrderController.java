@@ -105,6 +105,7 @@ public class OrderController {
         }
         Order order = optionalOrder.get();
         order.setStatus(updatedOrder.getStatus());
+        order.setOrderNumber(updatedOrder.getOrderNumber());
         Order savedOrder = orderRepository.save(order);
         return ResponseEntity.ok(savedOrder);
     }
